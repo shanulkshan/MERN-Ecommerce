@@ -1,6 +1,11 @@
 pipeline {
     agent any
     
+    environment {
+        DOCKER_IMAGE = "shanu99/nodeapp-cuban"
+        DOCKER_TAG = "${BUILD_NUMBER}"
+    }
+    
     stages {
         stage('SCM Checkout') {
             steps {
@@ -11,21 +16,19 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t shanu99/nodeapp-cuban:${BUILD_NUMBER} .'
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
             }
         }
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([string(credentialsId: 'test-dockerhubpassword', variable: 'test-dockerhubpass')]) {
-                    
-                        bat "docker login -u shanu99 -p '${test-dockerhubpass}'"
-                    
+                    bat "docker login -u shanu99 -p ${test-dockerhubpass}"
                 }
             }
         }
         stage('Push Image') {
             steps {
-                bat "docker push shanu99/nodeapp-cuban:${BUILD_NUMBER}"
+                bat "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
             }
         }
     }
