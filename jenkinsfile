@@ -1,49 +1,37 @@
 pipeline {
     agent any
-
-    environment {
-        NODE_ENV = 'production'
-    }
-
+    
     stages {
-        stage('Checkout') {
+        stage('SCM Checkout') {
             steps {
-                checkout scm
+                retry(3) {
+                    git branch: 'main', url: 'https://github.com/shanulkshan/MERN-Ecommerce.git'
+                }
             }
         }
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
-                sh 'npm install'
+                bat 'docker build -t shanu99/nodeapp-cuban:${BUILD_NUMBER} .'
             }
         }
-        stage('Build') {
+        stage('Login to Docker Hub') {
             steps {
-                sh 'npm run build'
+                withCredentials([string(credentialsId: 'test-dockerhubpassword', variable: 'test-dockerhubpass')]) {
+                    
+                        bat "docker login -u shanu99 -p '${test-dockerhubpass}'"
+                    
+                }
             }
         }
-        stage('Test') {
+        stage('Push Image') {
             steps {
-                sh 'npm test'
-            }
-        }
-        stage('Deploy') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo 'Deploying application...'
-                // Add your deployment commands here, e.g.:
-                // sh './deploy.sh'
+                bat "docker push shanu99/nodeapp-cuban:${BUILD_NUMBER}"
             }
         }
     }
-
     post {
         always {
-            echo 'Pipeline finished.'
-        }
-        failure {
-            echo 'Build failed!'
+            bat 'docker logout'
         }
     }
 }
