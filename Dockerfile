@@ -4,17 +4,21 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy backend package.json and package-lock.json
+COPY backend/package*.json ./backend/
 
-# Install dependencies
-RUN npm install
+# Install backend dependencies
+RUN cd backend && npm install
 
-# Copy the rest of the application code
-COPY . .
+# Copy backend source code
+COPY backend/ ./backend/
 
-# Expose the port the app runs on (change if needed)
-EXPOSE 5000
+# Copy environment file
+COPY backend/config/.env ./backend/config/
 
-# Start the application
+# Expose the port the backend runs on
+EXPOSE 8000
+
+# Change to backend directory and start the application
+WORKDIR /app/backend
 CMD ["npm", "start"]
